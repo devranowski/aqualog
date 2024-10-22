@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Activity } from 'lucide-react';
 import { Bubbles } from '@/components/Aquarium/Bubbles';
 import { AquariumPlants } from '@/components/Aquarium/AquariumPlants';
@@ -11,26 +11,75 @@ import { AqualogPromoContent } from '@/components/Aquarium/AqualogPromoContent';
 import { FishPosition } from '@/components/common/types';
 
 const Aquarium = () => {
-  const [fishPositions, setFishPositions] = useState<FishPosition[]>([
-    { x: 20, y: 30, direction: 1, speedX: 0.5, speedY: 0.3, amplitudeX: 40, amplitudeY: 30 },
-    { x: 70, y: 60, direction: -1, speedX: 0.4, speedY: 0.5, amplitudeX: 50, amplitudeY: 25 },
-    { x: 40, y: 80, direction: 1, speedX: 0.6, speedY: 0.2, amplitudeX: 30, amplitudeY: 40 },
-    { x: 90, y: 20, direction: -1, speedX: 0.3, speedY: 0.4, amplitudeX: 45, amplitudeY: 35 }
-  ]);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const bufferBottom = 100;
+
+  const [fishPositions, setFishPositions] = useState<FishPosition[]>([]);
+
+  useEffect(() => {
+    if (windowSize.width === 0 || windowSize.height === 0) return;
+
+    const generateFish = (numFish: number) => {
+      const fishArray = [];
+      for (let i = 0; i < numFish; i++) {
+        fishArray.push({
+          x: Math.random() * windowSize.width,
+          y: Math.random() * (windowSize.height - bufferBottom),
+          directionX: Math.random() < 0.5 ? 1 : -1,
+          directionY: Math.random() < 0.5 ? 1 : -1,
+          speedX: 30 + Math.random() * 30,
+          speedY: 20 + Math.random() * 30
+        });
+      }
+      return fishArray;
+    };
+
+    setFishPositions(generateFish(4));
+  }, [windowSize]);
+
+  const lastTimeRef = useRef(Date.now());
 
   useEffect(() => {
     const animateFish = () => {
-      const time = Date.now() * 0.001;
+      const currentTime = Date.now();
+      const deltaTime = (currentTime - lastTimeRef.current) / 1000;
+      lastTimeRef.current = currentTime;
+
       setFishPositions((prevPositions) =>
         prevPositions.map((fish) => {
-          const newX = (Math.sin(time * fish.speedX) * fish.amplitudeX + 50) % 100;
-          const newY = (Math.cos(time * fish.speedY) * fish.amplitudeY + 50) % 100;
-          const newDirection = newX > fish.x ? 1 : -1;
+          let newX = fish.x + fish.speedX * deltaTime * fish.directionX;
+          let newY = fish.y + fish.speedY * deltaTime * fish.directionY;
+          let newDirectionX = fish.directionX;
+          let newDirectionY = fish.directionY;
+
+          if (newX <= 0 || newX >= windowSize.width) {
+            newDirectionX *= -1;
+            newX = fish.x + fish.speedX * deltaTime * newDirectionX;
+          }
+
+          if (newY <= 0 || newY >= windowSize.height - bufferBottom) {
+            newDirectionY *= -1;
+            newY = fish.y + fish.speedY * deltaTime * newDirectionY;
+          }
+
           return {
             ...fish,
             x: newX,
             y: newY,
-            direction: newDirection
+            directionX: newDirectionX,
+            directionY: newDirectionY
           };
         })
       );
@@ -38,7 +87,7 @@ const Aquarium = () => {
 
     const intervalId = setInterval(animateFish, 50);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [windowSize]);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-blue-900 via-blue-600 to-blue-400 p-4 font-[family-name:var(--font-geist-sans)]">

@@ -12,13 +12,15 @@ const Fish = ({ fishPositions }: FishProps) => (
         key={index}
         className="fish-container"
         style={{
-          left: `${fish.x}%`,
-          top: `${fish.y}%`,
-          transform: `scaleX(${fish.direction})`
+          left: `${fish.x}px`,
+          top: `${fish.y}px`,
+          transform: `scaleX(${fish.directionX})`
         }}
       >
         <FishIcon
-          className={`text-${['orange', 'yellow', 'red', 'purple'][index]}-400 opacity-80 w-${[12, 10, 8, 16][index]} h-${[12, 10, 8, 16][index]}`}
+          className={`text-${
+            ['orange', 'yellow', 'red', 'purple'][index % 4]
+          }-400 opacity-80 w-${[12, 10, 8, 16][index % 4]} h-${[12, 10, 8, 16][index % 4]}`}
         />
       </div>
     ))}

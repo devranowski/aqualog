@@ -1,9 +1,8 @@
-export type FishPosition = {
-    x: number
-    y: number
-    direction: number
-    speedX: number
-    speedY: number
-    amplitudeX: number
-    amplitudeY: number
+export interface FishPosition {
+  x: number; // in pixels
+  y: number; // in pixels
+  directionX: number; // 1 or -1
+  directionY: number; // 1 or -1
+  speedX: number; // pixels per second
+  speedY: number; // pixels per second
 }
