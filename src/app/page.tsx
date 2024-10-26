@@ -1,4 +1,4 @@
-import Aquarium from '@/components/Aquarium/Aquarium';
+import { Aquarium } from '@/components/Aquarium/Aquarium';
 
 const HomePage = () => <Aquarium />;
 
