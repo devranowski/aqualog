@@ -43,12 +43,7 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <div className="flex items-center justify-between px-4">
-            <SidebarGroupLabel>Aquariums</SidebarGroupLabel>
-            <Button variant="ghost" size="icon" onClick={() => setIsAddAquariumOpen(true)}>
-              <PlusCircle className="h-4 w-4" />
-            </Button>
-          </div>
+          <SidebarGroupLabel>Aquariums</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {aquariums.length === 0 ? (
@@ -71,6 +66,9 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
                   </SidebarMenuItem>
                 ))
               )}
+              <SidebarMenuItem>
+                <AddAquariumDialog onAddAquarium={onAddAquarium} />
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -114,11 +112,6 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <AddAquariumDialog
-        open={isAddAquariumOpen}
-        onOpenChange={setIsAddAquariumOpen}
-        onSubmit={onAddAquarium}
-      />
     </Sidebar>
   );
 };

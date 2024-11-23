@@ -59,7 +59,6 @@ export function Dashboard() {
       const newAquarium = await addAquarium(name);
       setAquariums((prev) => [...prev, newAquarium]);
       setSelectedAquarium(newAquarium);
-      setIsAddAquariumOpen(false);
       toast({
         title: 'Aquarium added',
         description: `${name} has been added to your aquariums.`
@@ -225,76 +224,80 @@ export function Dashboard() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen w-full bg-gradient-to-t from-blue-400 via-blue-300 to-blue-100">
         <DashboardSidebar
           aquariums={aquariums}
           selectedAquarium={selectedAquarium}
-          onAquariumSelect={setSelectedAquarium}
+          onAquariumSelect={handleAquariumSelect}
           onAddAquarium={handleAddAquarium}
         />
-        <div className="flex-1 overflow-y-auto">
-          <div className="container py-6">
-            {selectedAquarium ? (
-              <>
-                <div className="mb-6 flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold">{selectedAquarium.name}</h1>
-                    <p className="text-muted-foreground text-sm">
-                      Last updated {format(new Date(), 'MMM d, yyyy h:mm a')}
-                    </p>
-                  </div>
-                  <Button onClick={() => setIsAddLogOpen(true)}>Add Log</Button>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {parameters.map((parameter) => (
-                    <ParameterCard
-                      key={parameter.id}
-                      parameter={parameter}
-                      data={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]}
-                    />
-                  ))}
-                </div>
-                <RecentLogs
-                  aquariumId={selectedAquarium.id}
-                  aquariumName={selectedAquarium.name}
-                  aquariumData={aquariumDataState}
-                />
-              </>
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center">
-                <h2 className="mb-4 text-2xl font-semibold">Welcome to Aqualog!</h2>
-                <p className="text-muted-foreground mb-8 text-center">
-                  {aquariums.length === 0
-                    ? "You haven't added any aquariums yet. Start by adding your first aquarium!"
-                    : 'Select an aquarium from the sidebar to view its data.'}
-                </p>
-                {aquariums.length === 0 && (
-                  <Button onClick={() => setIsAddAquariumOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Your First Aquarium
-                  </Button>
-                )}
+
+        <main className="flex-grow overflow-auto p-8">
+          {selectedAquarium ? (
+            <>
+              <div className="mb-6 flex items-center justify-between">
+                <h1 className="text-3xl font-bold text-gray-800">{selectedAquarium.name} Dashboard</h1>
+                <Button onClick={() => setIsAddLogOpen(true)}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add New Log
+                </Button>
               </div>
-            )}
-          </div>
-        </div>
+
+              <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {parameters.map((parameter) => (
+                  <ParameterCard
+                    key={parameter.id}
+                    title={parameter.name}
+                    value={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.current ?? 0}
+                    unit={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.unit ?? parameter.unit}
+                    data={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.data ?? []}
+                    color={parameter.color}
+                    onAddValue={(value, date) => handleAddValue(parameter.name.toLowerCase(), value, date)}
+                  />
+                ))}
+              </div>
+
+              <RecentLogs
+                aquariumId={selectedAquarium.id}
+                aquariumName={selectedAquarium.name}
+                aquariumData={aquariumDataState}
+              />
+            </>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center">
+              <h2 className="mb-4 text-2xl font-semibold">Welcome to Aqualog!</h2>
+              <p className="text-muted-foreground mb-8 text-center">
+                {aquariums.length === 0
+                  ? "You haven't added any aquariums yet. Start by adding your first aquarium!"
+                  : 'Select an aquarium from the sidebar to view its data.'}
+              </p>
+              {aquariums.length === 0 && (
+                <AddAquariumDialog 
+                  onAddAquarium={handleAddAquarium}
+                  isOpen={isAddAquariumOpen}
+                  onOpenChange={setIsAddAquariumOpen}
+                  trigger={
+                    <Button>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Your First Aquarium
+                    </Button>
+                  }
+                />
+              )}
+            </div>
+          )}
+        </main>
       </div>
       <AddLogDialog
         isOpen={isAddLogOpen}
         onOpenChange={setIsAddLogOpen}
-        parameters={parameters}
         onSubmit={handleAddLog}
         newLog={newLog}
         onNewLogChange={handleNewLogChange}
         newLogDate={newLogDate}
         onNewLogDateChange={setNewLogDate}
+        parameters={parameters}
       />
-      {/* <AddAquariumDialog
-        open={isAddAquariumOpen}
-        onOpenChange={setIsAddAquariumOpen}
-        onSubmit={handleAddAquarium}
-        className="test"
-      /> */}
       <Toaster />
     </SidebarProvider>
   );
