@@ -18,11 +18,11 @@ type ParameterCardProps = {
   value: number;
   unit: string;
   data: Array<{ date: string; value: number }>;
-  color: string;
+  color?: string;
   onAddValue: (value: number, date: Date) => void;
 };
 
-const ParameterCard = ({ title, value, unit, data, color, onAddValue }: ParameterCardProps) => {
+const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue }: ParameterCardProps) => {
   const [isAddingValue, setIsAddingValue] = React.useState(false);
   const [newValue, setNewValue] = React.useState('');
   const [date, setDate] = React.useState<Date>();

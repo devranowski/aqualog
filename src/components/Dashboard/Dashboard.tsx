@@ -251,7 +251,6 @@ export function Dashboard() {
                     value={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.current ?? 0}
                     unit={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.unit ?? parameter.unit}
                     data={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.data ?? []}
-                    color={parameter.color}
                     onAddValue={(value, date) => handleAddValue(parameter.name.toLowerCase(), value, date)}
                   />
                 ))}
