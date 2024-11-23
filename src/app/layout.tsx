@@ -4,7 +4,7 @@ import localFont from 'next/font/local';
 import '../styles/globals.css';
 import '../styles/Aquarium.css';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { SupabaseAuthProvider } from '@/components/providers/supabase-auth-provider';
+import { SupabaseAuthProvider } from '@/providers/supabase-auth-provider';
 
 const geistSans = localFont({
   src: '../fonts/GeistVF.woff',
