@@ -21,12 +21,14 @@ import { AddAquariumDialog } from './AddAquariumDialog';
 
 type DashboardSidebarProps = {
   aquariums: Aquarium[];
-  selectedAquarium: Aquarium;
+  selectedAquarium: Aquarium | null;
   onAquariumSelect: (aquarium: Aquarium) => void;
   onAddAquarium: (name: string) => void;
 };
 
 const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAddAquarium }: DashboardSidebarProps) => {
+  const [isAddAquariumOpen, setIsAddAquariumOpen] = React.useState(false);
+
   return (
     <Sidebar className="w-64">
       <SidebarHeader className="p-4 pt-8">
@@ -41,26 +43,34 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Aquariums</SidebarGroupLabel>
+          <div className="flex items-center justify-between px-4">
+            <SidebarGroupLabel>Aquariums</SidebarGroupLabel>
+            <Button variant="ghost" size="icon" onClick={() => setIsAddAquariumOpen(true)}>
+              <PlusCircle className="h-4 w-4" />
+            </Button>
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
-              {aquariums.map((aquarium) => (
-                <SidebarMenuItem key={aquarium.id}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={aquarium.id === selectedAquarium.id}
-                    onClick={() => onAquariumSelect(aquarium)}
-                  >
-                    <button className="flex w-full items-center">
-                      <Waves className="mr-2 h-4 w-4" />
-                      {aquarium.name}
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              <SidebarMenuItem>
-                <AddAquariumDialog onAddAquarium={onAddAquarium} />
-              </SidebarMenuItem>
+              {aquariums.length === 0 ? (
+                <div className="px-4 py-2 text-sm text-muted-foreground">
+                  No aquariums yet
+                </div>
+              ) : (
+                aquariums.map((aquarium) => (
+                  <SidebarMenuItem key={aquarium.id}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={aquarium.id === selectedAquarium?.id}
+                      onClick={() => onAquariumSelect(aquarium)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Waves className="h-4 w-4" />
+                        {aquarium.name}
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -104,6 +114,11 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <AddAquariumDialog
+        open={isAddAquariumOpen}
+        onOpenChange={setIsAddAquariumOpen}
+        onSubmit={onAddAquarium}
+      />
     </Sidebar>
   );
 };

@@ -5,12 +5,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { type AquariumDataState } from './types';
 
 type RecentLogsProps = {
-  aquariumId: number;
+  aquariumId: string;
   aquariumName: string;
   aquariumData: AquariumDataState;
 };
 
 const RecentLogs = ({ aquariumId, aquariumName, aquariumData }: RecentLogsProps) => {
+  const aquariumParameters = aquariumData[aquariumId] || {};
+
   return (
     <Card className="mb-8">
       <CardHeader>
@@ -21,47 +23,19 @@ const RecentLogs = ({ aquariumId, aquariumName, aquariumData }: RecentLogsProps)
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Temperature</TableHead>
-              <TableHead>pH</TableHead>
-              <TableHead>Ammonia</TableHead>
-              <TableHead>Nitrate</TableHead>
+              <TableHead>Parameter</TableHead>
+              <TableHead>Value</TableHead>
+              <TableHead>Unit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {aquariumData[aquariumId]?.temperature.data
-              .slice(-3)
-              .reverse()
-              .map((entry, index) => (
-                <TableRow key={entry.date}>
-                  <TableCell>{entry.date}</TableCell>
-                  <TableCell>
-                    {
-                      aquariumData[aquariumId]?.temperature.data[
-                        aquariumData[aquariumId]?.temperature.data.length - 1 - index
-                      ].value
-                    }
-                    °F
-                  </TableCell>
-                  <TableCell>
-                    {aquariumData[aquariumId]?.ph.data[aquariumData[aquariumId]?.ph.data.length - 1 - index].value}
-                  </TableCell>
-                  <TableCell>
-                    {
-                      aquariumData[aquariumId]?.ammonia.data[aquariumData[aquariumId]?.ammonia.data.length - 1 - index]
-                        .value
-                    }{' '}
-                    ppm
-                  </TableCell>
-                  <TableCell>
-                    {
-                      aquariumData[aquariumId]?.nitrate.data[aquariumData[aquariumId]?.nitrate.data.length - 1 - index]
-                        .value
-                    }{' '}
-                    ppm
-                  </TableCell>
-                </TableRow>
-              ))}
+            {Object.entries(aquariumParameters).map(([paramName, paramData]) => (
+              <TableRow key={paramName}>
+                <TableCell className="capitalize">{paramName}</TableCell>
+                <TableCell>{paramData.current}</TableCell>
+                <TableCell>{paramData.unit}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </CardContent>

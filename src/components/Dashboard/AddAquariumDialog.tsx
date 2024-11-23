@@ -17,23 +17,24 @@ import { PlusCircle } from 'lucide-react';
 import { SidebarMenuButton } from '@/components/ui/sidebar';
 
 type AddAquariumDialogProps = {
-  onAddAquarium: (name: string) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (name: string) => void;
 };
 
-const AddAquariumDialog = ({ onAddAquarium }: AddAquariumDialogProps) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+const AddAquariumDialog = ({ open, onOpenChange, onSubmit }: AddAquariumDialogProps) => {
   const [newAquariumName, setNewAquariumName] = React.useState('');
 
-  const handleAddAquarium = () => {
+  const handleSubmit = () => {
     if (newAquariumName.trim() !== '') {
-      onAddAquarium(newAquariumName.trim());
+      onSubmit(newAquariumName.trim());
       setNewAquariumName('');
-      setIsOpen(false);
+      onOpenChange(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <SidebarMenuButton className="w-full">
           <PlusCircle className="mr-2 h-4 w-4" />
@@ -48,11 +49,16 @@ const AddAquariumDialog = ({ onAddAquarium }: AddAquariumDialogProps) => {
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" value={newAquariumName} onChange={(e) => setNewAquariumName(e.target.value)} />
+            <Input 
+              id="name" 
+              value={newAquariumName} 
+              onChange={(e) => setNewAquariumName(e.target.value)} 
+              placeholder="My Aquarium"
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleAddAquarium}>Add Aquarium</Button>
+          <Button onClick={handleSubmit} disabled={!newAquariumName.trim()}>Add Aquarium</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
