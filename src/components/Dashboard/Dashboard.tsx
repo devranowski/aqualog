@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { format } from 'date-fns';
 import { DashboardSidebar } from './DashboardSidebar';
 import { ParameterCard } from './ParameterCard';
@@ -236,7 +236,10 @@ export function Dashboard() {
           {selectedAquarium ? (
             <>
               <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-gray-800">{selectedAquarium.name} Dashboard</h1>
+                <div className="flex items-center gap-2">
+                  <SidebarTrigger className="h-8 w-8" />
+                  <h1 className="text-3xl font-bold text-gray-800">{selectedAquarium.name} Dashboard</h1>
+                </div>
                 <Button onClick={() => setIsAddLogOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add New Log
