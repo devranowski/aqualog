@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { CalendarIcon, PlusCircle, Waves } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,7 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center space-x-2">
-          <Waves className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+          <Waves className="h-4 w-4 text-neutral-500 dark:text-neutral-400" aria-hidden="true" />
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
         </div>
         <Popover open={isAddingValue} onOpenChange={setIsAddingValue}>
@@ -103,12 +103,21 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
         </Popover>
       </CardHeader>
       <CardContent className="pb-2">
-        <div className="text-xl font-bold">
-          {value}
-          {unit}
-        </div>
-        <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">Last updated: 5 min ago</p>
-        <div className="mt-4 h-[calc(100%-60px)]">
+        <section aria-label={`${title} statistics`}>
+          <div className="flex items-baseline gap-1">
+            <div className="text-3xl font-bold" aria-label={`Current ${title}`}>
+              {data[data.length - 1]?.value ?? value}
+            </div>
+            <div className="text-lg text-neutral-500 dark:text-neutral-400">{unit}</div>
+          </div>
+          <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
+            Last updated:{' '}
+            {data[data.length - 1]?.date
+              ? `${format(new Date(data[data.length - 1].date), 'd MMM')} (${formatDistanceToNow(new Date(data[data.length - 1].date), { addSuffix: true })})`
+              : 'No data'}
+          </p>
+        </section>
+        <div className="mt-4 h-[calc(100%-60px)]" aria-label={`${title} trend chart`}>
           <ChartContainer
             config={{
               value: {
@@ -118,7 +127,7 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
             }}
           >
             <ResponsiveContainer>
-              <LineChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+              <LineChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 10 }}
