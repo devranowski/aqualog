@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ChartTooltip } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { cn } from '@/lib/utils';
 
 type ParameterCardProps = {
@@ -102,67 +102,57 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
           </PopoverContent>
         </Popover>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">
+      <CardContent className="pb-2">
+        <div className="text-xl font-bold">
           {value}
           {unit}
         </div>
-        <div className="h-[200px] mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-              <XAxis
-                dataKey="date"
-                tickFormatter={(date) => format(new Date(date), 'MMM d')}
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tickFormatter={(value) => `${value}${unit}`}
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke={color}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-              />
-              <ChartTooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="rounded-lg border bg-background p-2 shadow-sm">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              {title}
-                            </span>
-                            <span className="font-bold text-muted-foreground">
-                              {payload[0].value}
-                              {unit}
-                            </span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              Date
-                            </span>
-                            <span className="font-bold">
-                              {format(new Date(label), 'MMM d, yyyy')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
+        <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">Last updated: 5 min ago</p>
+        <div className="mt-4 h-[calc(100%-60px)]">
+          <ChartContainer
+            config={{
+              value: {
+                label: title,
+                color: color
+              }
+            }}
+          >
+            <ResponsiveContainer>
+              <LineChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(date) =>
+                    new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                   }
-                  return null;
-                }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+                />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(value) => `${value}${unit}`} />
+                <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={false} />
+                <ChartTooltip
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="rounded border border-neutral-200 bg-white p-2 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+                          <p className="text-sm font-medium">
+                            {new Date(label).toLocaleDateString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                            {payload[0].value}
+                            {unit}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartContainer>
         </div>
       </CardContent>
     </Card>
