@@ -115,7 +115,7 @@ export function Dashboard() {
         }
 
         const logData = parameterLogs.map((log) => ({
-          date: new Date(log.created_at).toISOString(),
+          date: log.logged_at,
           value: log.value
         }));
 
