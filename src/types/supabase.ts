@@ -60,27 +60,21 @@ export interface Database {
           aquarium_id: string
           parameter_id: string
           value: number
-          logged_at: string
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
           aquarium_id: string
           parameter_id: string
           value: number
-          logged_at?: string
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
           aquarium_id?: string
           parameter_id?: string
           value?: number
-          logged_at?: string
           created_at?: string
-          updated_at?: string
         }
       }
       users: {

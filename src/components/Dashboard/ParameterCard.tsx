@@ -17,7 +17,7 @@ type ParameterCardProps = {
   title: string;
   value: number;
   unit: string;
-  data: Array<{ date: string; value: number }>;
+  data: Array<{ date: string; value: number; created_at: string }>;
   color?: string;
   onAddValue: (value: number, date: Date) => void;
 };
@@ -112,8 +112,8 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
           </div>
           <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
             Last updated:{' '}
-            {data[data.length - 1]?.date
-              ? `${format(new Date(data[data.length - 1].date), 'd MMM')} (${formatDistanceToNow(new Date(data[data.length - 1].date), { addSuffix: true })})`
+            {data[data.length - 1]?.created_at
+              ? `${format(new Date(data[data.length - 1].created_at), 'd MMM')} (${formatDistanceToNow(new Date(data[data.length - 1].created_at), { addSuffix: true })})`
               : 'No data'}
           </p>
         </section>
@@ -129,7 +129,7 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
             <ResponsiveContainer>
               <LineChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <XAxis
-                  dataKey="date"
+                  dataKey="created_at"
                   tick={{ fontSize: 10 }}
                   tickFormatter={(date) =>
                     new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })

@@ -32,8 +32,8 @@ export async function getParameterLogs(aquariumId: string, days: number = 7) {
       parameters (name, unit)
     `)
     .eq('aquarium_id', aquariumId)
-    .gte('logged_at', startDate.toISOString())
-    .order('logged_at', { ascending: false })
+    .gte('created_at', startDate.toISOString())
+    .order('created_at', { ascending: false })
 
   if (error) throw error
   return logs
@@ -54,7 +54,7 @@ export async function addParameterLog(
   aquariumId: string,
   parameterId: string,
   value: number,
-  loggedAt?: string
+  createdAt?: string
 ) {
   const { data: log, error } = await supabase
     .from('parameter_logs')
@@ -63,10 +63,10 @@ export async function addParameterLog(
         aquarium_id: aquariumId,
         parameter_id: parameterId,
         value,
-        logged_at: loggedAt || new Date().toISOString()
+        created_at: createdAt || new Date().toISOString()
       }
     ])
-    .select()
+    .select('id, aquarium_id, parameter_id, value, created_at')
     .single()
 
   if (error) throw error
@@ -81,7 +81,7 @@ export async function getLatestParameterLogs(aquariumId: string) {
       parameters (name, unit)
     `)
     .eq('aquarium_id', aquariumId)
-    .order('logged_at', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(1)
 
   if (error) throw error

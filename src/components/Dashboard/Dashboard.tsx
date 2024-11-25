@@ -115,8 +115,9 @@ export function Dashboard() {
         }
 
         const logData = parameterLogs.map((log) => ({
-          date: log.logged_at,
-          value: log.value
+          date: log.created_at,
+          value: log.value,
+          created_at: log.created_at
         }));
 
         newData[selectedAquarium.id][param.name.toLowerCase()] = {
@@ -155,7 +156,9 @@ export function Dashboard() {
 
     try {
       const parameter = parameters.find((p) => p.name.toLowerCase() === parameterName.toLowerCase());
-      if (!parameter) return;
+      if (!parameter || !value) {
+        throw new Error(`Parameter ${parameterName} not found or value is empty`);
+      }
 
       await addParameterLog(selectedAquarium.id, parameter.id, value, date.toISOString());
       await fetchAquariumData();

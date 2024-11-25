@@ -10,6 +10,7 @@ export type AquariumParameter = {
   data: Array<{
     date: string
     value: number
+    created_at: string
   }>
 }
 
