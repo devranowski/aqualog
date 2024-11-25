@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Nunito } from 'next/font/google';
+import LoginButton from '@/components/Auth/LoginButton';
 
 const nunito = Nunito({ subsets: ['latin'] });
 
@@ -16,8 +17,8 @@ export default function LoginPage() {
           <h1 className="mt-6 text-3xl font-bold text-gray-900">Aqualog</h1>
           <p className="mt-2 text-sm text-gray-600">Manage your aquarium with ease</p>
         </div>
-        <div className="mt-8 text-center">
-          <p className="text-2xl font-medium uppercase tracking-wide text-blue-500">Surfacing Soon</p>
+        <div className="mt-8">
+          <LoginButton />
         </div>
       </div>
     </div>

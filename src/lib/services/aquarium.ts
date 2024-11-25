@@ -40,9 +40,13 @@ export async function getParameterLogs(aquariumId: string, days: number = 7) {
 }
 
 export async function addAquarium(name: string) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!user) throw new Error('User not authenticated');
+
   const { data: aquarium, error } = await supabase
     .from('aquariums')
-    .insert([{ name, user_id: '00000000-0000-0000-0000-000000000000' }])
+    .insert([{ name, user_id: user.id }])
     .select()
     .single();
 
