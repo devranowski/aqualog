@@ -14,7 +14,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton
+  SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import { type Aquarium } from './types';
 import { AddAquariumDialog } from './AddAquariumDialog';
@@ -72,6 +72,7 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {/* Temporarily commented out Menu section
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -111,6 +112,7 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        */}
       </SidebarContent>
     </Sidebar>
   );

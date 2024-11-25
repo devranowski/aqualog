@@ -241,7 +241,7 @@ export function Dashboard() {
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <SidebarTrigger className="h-8 w-8" />
-                  <h1 className="text-3xl font-bold text-gray-800">{selectedAquarium.name} Dashboard</h1>
+                  <h1 className="text-3xl font-bold text-gray-800">{selectedAquarium.name}</h1>
                 </div>
                 <Button onClick={() => setIsAddLogOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -255,7 +255,9 @@ export function Dashboard() {
                     key={parameter.id}
                     title={parameter.name}
                     value={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.current ?? 0}
-                    unit={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.unit ?? parameter.unit}
+                    unit={
+                      aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.unit ?? parameter.unit
+                    }
                     data={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.data ?? []}
                     onAddValue={(value, date) => handleAddValue(parameter.name.toLowerCase(), value, date)}
                   />
@@ -277,7 +279,7 @@ export function Dashboard() {
                   : 'Select an aquarium from the sidebar to view its data.'}
               </p>
               {aquariums.length === 0 && (
-                <AddAquariumDialog 
+                <AddAquariumDialog
                   onAddAquarium={handleAddAquarium}
                   isOpen={isAddAquariumOpen}
                   onOpenChange={setIsAddAquariumOpen}
