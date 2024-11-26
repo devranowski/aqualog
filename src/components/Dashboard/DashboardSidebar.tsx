@@ -56,10 +56,10 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
                       isActive={aquarium.id === selectedAquarium?.id}
                       onClick={() => onAquariumSelect(aquarium)}
                     >
-                      <div className="flex items-center gap-2">
+                      <button className="flex items-center gap-2">
                         <Waves className="h-4 w-4" />
                         {aquarium.name}
-                      </div>
+                      </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))

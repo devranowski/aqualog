@@ -9,8 +9,10 @@ import { cn } from '@/lib/utils';
 import { normalizeNumericInput } from '@/lib/utils/number';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { type NewLog } from '@/types/app';
+import { useParameterLogs } from '@/hooks/use-parameter-logs';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
+import type { Parameter } from '@/types/app';
 import {
   Drawer,
   DrawerClose,
@@ -24,20 +26,20 @@ import {
 interface AddLogFormProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (e: React.FormEvent<Element>, date: Date) => void;
-  newLog: NewLog;
-  onNewLogChange: (parameter: string, value: string) => void;
-  parameters: Array<{ id: string; name: string; unit: string }>;
+  parameters: Parameter[];
+  aquariumId: string;
+  onSuccess?: () => void;
 }
 
 interface FormContentProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   handleSubmit: (e?: React.FormEvent) => void;
-  parameters: Array<{ id: string; name: string; unit: string }>;
-  newLog: NewLog;
+  parameters: Parameter[];
+  newLog: Record<string, string>;
   onNewLogChange: (parameter: string, value: string) => void;
   showSubmitButton?: boolean;
+  isSubmitting?: boolean;
 }
 
 const FormContent = React.memo(function FormContent({
@@ -47,8 +49,9 @@ const FormContent = React.memo(function FormContent({
   parameters,
   newLog,
   onNewLogChange,
-  showSubmitButton = true
-}: FormContentProps & { showSubmitButton?: boolean }) {
+  showSubmitButton = true,
+  isSubmitting
+}: FormContentProps & { showSubmitButton?: boolean; isSubmitting?: boolean }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid w-full items-center gap-4">
@@ -83,16 +86,31 @@ const FormContent = React.memo(function FormContent({
       </div>
       {showSubmitButton && (
         <div className="flex justify-end">
-          <Button type="submit">Add Log</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Adding Log...' : 'Add Log'}
+          </Button>
         </div>
       )}
     </form>
   );
 });
 
-export function AddLogForm({ isOpen, onOpenChange, onSubmit, newLog, onNewLogChange, parameters }: AddLogFormProps) {
+export function AddLogForm({ 
+  isOpen, 
+  onOpenChange,
+  parameters,
+  aquariumId,
+  onSuccess
+}: AddLogFormProps) {
   const [date, setDate] = React.useState<Date>();
+  const [newLog, setNewLog] = React.useState<Record<string, string>>({});
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const { addMultipleLogs, isSubmitting } = useParameterLogs({
+    aquariumId,
+    parameters,
+    toast
+  });
 
   // Set today's date when opening the dialog
   React.useEffect(() => {
@@ -101,20 +119,24 @@ export function AddLogForm({ isOpen, onOpenChange, onSubmit, newLog, onNewLogCha
     }
   }, [isOpen, date]);
 
-  const handleSubmit = React.useCallback(
-    (e?: React.FormEvent<Element>) => {
-      e?.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    if (!date) return;
 
-      const hasValues = Object.values(newLog).some((value) => value !== '');
-      const isValid = date && hasValues;
+    const success = await addMultipleLogs(newLog, date);
+    if (success) {
+      setNewLog({});
+      setDate(undefined);
+      onOpenChange(false);
+      onSuccess?.();
+    }
+  };
 
-      if (isValid && e) {
-        onSubmit(e, date);
-        setDate(undefined);
-      }
-    },
-    [date, onSubmit, newLog]
-  );
+  const handleNewLogChange = (parameter: string, value: string) => {
+    setNewLog(prev => ({ ...prev, [parameter]: value }));
+  };
 
   const formContent = React.useMemo(
     () => (
@@ -124,11 +146,12 @@ export function AddLogForm({ isOpen, onOpenChange, onSubmit, newLog, onNewLogCha
         handleSubmit={handleSubmit}
         parameters={parameters}
         newLog={newLog}
-        onNewLogChange={onNewLogChange}
+        onNewLogChange={handleNewLogChange}
         showSubmitButton={!isMobile}
+        isSubmitting={isSubmitting}
       />
     ),
-    [date, handleSubmit, parameters, newLog, onNewLogChange, isMobile]
+    [date, handleSubmit, parameters, newLog, handleNewLogChange, isMobile, isSubmitting]
   );
 
   if (isMobile) {
@@ -136,15 +159,17 @@ export function AddLogForm({ isOpen, onOpenChange, onSubmit, newLog, onNewLogCha
       <Drawer open={isOpen} onOpenChange={onOpenChange}>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Add New Log</DrawerTitle>
+            <DrawerTitle>Add Parameter Log</DrawerTitle>
             <DrawerDescription>Add new parameter values for your aquarium.</DrawerDescription>
           </DrawerHeader>
           <div className="px-4">{formContent}</div>
-          <DrawerFooter className="grid grid-cols-2 gap-4">
+          <DrawerFooter>
+            <Button onClick={() => handleSubmit()} disabled={isSubmitting}>
+              {isSubmitting ? 'Adding Log...' : 'Add Log'}
+            </Button>
             <DrawerClose asChild>
               <Button variant="outline">Cancel</Button>
             </DrawerClose>
-            <Button onClick={() => handleSubmit()}>Add Log</Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -155,7 +180,7 @@ export function AddLogForm({ isOpen, onOpenChange, onSubmit, newLog, onNewLogCha
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Log</DialogTitle>
+          <DialogTitle>Add Parameter Log</DialogTitle>
           <DialogDescription>Add new parameter values for your aquarium.</DialogDescription>
         </DialogHeader>
         {formContent}

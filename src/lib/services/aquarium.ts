@@ -81,15 +81,47 @@ export async function getLatestParameterLogs(aquariumId: string) {
   const { data: logs, error } = await supabase
     .from('parameter_logs')
     .select(`
-      *,
+      id,
+      value,
+      created_at,
+      parameter_id,
       parameters (name, unit)
     `)
     .eq('aquarium_id', aquariumId)
     .order('created_at', { ascending: false })
-    .limit(1)
+    .order('parameter_id')
 
   if (error) throw error
-  return logs
+
+  // Get only the latest log for each parameter
+  const latestLogs = logs?.reduce((acc: any[], log) => {
+    const existingLog = acc.find(l => l.parameter_id === log.parameter_id);
+    if (!existingLog) {
+      acc.push(log);
+    }
+    return acc;
+  }, []);
+
+  return latestLogs || [];
+}
+
+export async function getParameterLogsByName(aquariumId: string, parameterId: string, days: number = 7) {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+
+  const { data: logs, error } = await supabase
+    .from('parameter_logs')
+    .select(`
+      *,
+      parameters (name, unit)
+    `)
+    .eq('aquarium_id', aquariumId)
+    .eq('parameter_id', parameterId)
+    .gte('created_at', startDate.toISOString())
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return logs;
 }
 
 export async function deleteAquarium(aquariumId: string) {
