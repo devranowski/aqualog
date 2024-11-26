@@ -18,7 +18,7 @@ export const normalizeNumericInput = (value: string): string => {
 
     // Only allow non-negative numbers
     if (!isNaN(numericValue) && numericValue >= 0) {
-      return value;
+      return normalizedValue;
     }
   }
 

@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { DashboardSidebar } from './DashboardSidebar';
 import { ParameterCard } from './ParameterCard';
 import { RecentLogs } from './RecentLogs';
-import { AddLogDialog } from './AddLogDialog';
+import { AddLogForm } from './AddLogForm';
 import { AddAquariumDialog } from './AddAquariumDialog';
 import { type NewLog, type AquariumDataState, type Aquarium, type AquariumData } from './types';
 import { type Parameter } from '@/types/app';
@@ -118,11 +118,24 @@ export function Dashboard() {
           newData[selectedAquarium.id] = {};
         }
 
+        // Create the base log data array from historical logs
         const logData = parameterLogs.map((log) => ({
           date: log.created_at,
           value: log.value,
           created_at: log.created_at
         }));
+
+        // Add the latest log if it's not already in the array
+        if (latestLog && !logData.some(log => log.created_at === latestLog.created_at)) {
+          logData.push({
+            date: latestLog.created_at,
+            value: latestLog.value,
+            created_at: latestLog.created_at
+          });
+        }
+
+        // Sort logs by date
+        logData.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
         newData[selectedAquarium.id][param.name.toLowerCase()] = {
           current: latestLog?.value ?? 0,
@@ -184,7 +197,13 @@ export function Dashboard() {
     if (!selectedAquarium) return;
 
     try {
-      const logPromises = Object.entries(newLog).map(([parameterName, value]) => {
+      const validLogs = Object.entries(newLog).filter(([_, value]) => value !== '');
+      
+      if (validLogs.length === 0) {
+        throw new Error('Please enter at least one parameter value');
+      }
+
+      const logPromises = validLogs.map(([parameterName, value]) => {
         const parameter = parameters.find((p) => p.name.toLowerCase() === parameterName.toLowerCase());
         const numericValue = parseNumericInput(value);
 
@@ -209,7 +228,7 @@ export function Dashboard() {
       toast({
         variant: 'destructive',
         title: 'Failed to add log',
-        description: 'There was an error adding your log. Please try again.'
+        description: error instanceof Error ? error.message : 'There was an error adding your log. Please try again.'
       });
     }
   };
@@ -332,7 +351,7 @@ export function Dashboard() {
           )}
         </main>
       </div>
-      <AddLogDialog
+      <AddLogForm
         isOpen={isAddLogOpen}
         onOpenChange={setIsAddLogOpen}
         onSubmit={(e, date) => handleAddLog(e, date)}
