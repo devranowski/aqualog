@@ -14,7 +14,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
+  SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { type Aquarium } from './types';
 import { AddAquariumDialog } from './AddAquariumDialog';
@@ -38,7 +38,7 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
             alt="Aqualog water droplet logo"
             className="h-8 w-8"
           />
-          <h2 className="text-2xl font-bold text-blue-600">Aqualog</h2>
+          <h2 className="text-2xl font-bold text-blue-400">Aqualog</h2>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -47,9 +47,7 @@ const DashboardSidebar = ({ aquariums, selectedAquarium, onAquariumSelect, onAdd
           <SidebarGroupContent>
             <SidebarMenu>
               {aquariums.length === 0 ? (
-                <div className="px-4 py-2 text-sm text-muted-foreground">
-                  No aquariums yet
-                </div>
+                <div className="text-muted-foreground px-4 py-2 text-sm">No aquariums yet</div>
               ) : (
                 aquariums.map((aquarium) => (
                   <SidebarMenuItem key={aquarium.id}>

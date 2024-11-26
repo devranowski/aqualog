@@ -23,6 +23,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { parseNumericInput } from '@/lib/utils/number';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function Dashboard() {
   const { toast } = useToast();
@@ -33,6 +34,7 @@ export function Dashboard() {
   const [isAddLogOpen, setIsAddLogOpen] = React.useState(false);
   const [isAddAquariumOpen, setIsAddAquariumOpen] = React.useState(false);
   const [newLog, setNewLog] = React.useState<NewLog>({});
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const fetchAquariums = async () => {
     try {
@@ -47,6 +49,8 @@ export function Dashboard() {
         title: 'Failed to fetch aquariums',
         description: 'There was an error loading your aquariums. Please try again later.'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -214,18 +218,6 @@ export function Dashboard() {
     setNewLog({ ...newLog, [parameter]: value });
   };
 
-  const handleParameterClick = (parameter: string) => {
-    if (!selectedAquarium || !aquariumDataState[selectedAquarium.id]) return;
-
-    const parameterData = aquariumDataState[selectedAquarium.id][parameter.toLowerCase()];
-    if (!parameterData) return;
-
-    const dates = parameterData.data.map((d) => new Date(d.date));
-    const values = parameterData.data.map((d) => d.value);
-
-    // Handle parameter click logic
-  };
-
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gradient-to-t from-blue-400 via-blue-300 to-blue-100">
@@ -237,7 +229,47 @@ export function Dashboard() {
         />
 
         <main className="flex-grow overflow-auto p-8">
-          {selectedAquarium ? (
+          {isLoading ? (
+            <>
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <SidebarTrigger className="h-8 w-8" />
+                  <Skeleton className="h-8 w-48" />
+                </div>
+                <Skeleton className="h-9 w-32" />
+              </div>
+
+              <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-card text-card-foreground rounded-lg border shadow-sm">
+                    <div className="p-6">
+                      <div className="flex items-center justify-between space-y-0 pb-2">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-6 w-6" />
+                      </div>
+                      <Skeleton className="mb-2 h-9 w-20" />
+                      <Skeleton className="h-4 w-32" />
+                      <div className="mt-4">
+                        <Skeleton className="h-[120px] w-full" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
+                <div className="p-6">
+                  <Skeleton className="mb-2 h-7 w-32" />
+                  <Skeleton className="mb-4 h-4 w-64" />
+                  <div className="space-y-2">
+                    {[...Array(4)].map((_, i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : selectedAquarium ? (
             <>
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">

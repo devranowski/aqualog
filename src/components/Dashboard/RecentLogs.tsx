@@ -1,5 +1,6 @@
 'use client';
 
+import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { type AquariumDataState } from './types';
@@ -24,18 +25,25 @@ const RecentLogs = ({ aquariumId, aquariumName, aquariumData }: RecentLogsProps)
           <TableHeader>
             <TableRow>
               <TableHead>Parameter</TableHead>
-              <TableHead>Value</TableHead>
-              <TableHead>Unit</TableHead>
+              <TableHead>Latest Value</TableHead>
+              <TableHead>Last Updated</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Object.entries(aquariumParameters).map(([paramName, paramData]) => (
-              <TableRow key={paramName}>
-                <TableCell className="capitalize">{paramName}</TableCell>
-                <TableCell>{paramData.current}</TableCell>
-                <TableCell>{paramData.unit}</TableCell>
-              </TableRow>
-            ))}
+            {Object.entries(aquariumParameters).map(([paramName, paramData]) => {
+              const lastEntry = paramData.data[paramData.data.length - 1];
+              return (
+                <TableRow key={paramName}>
+                  <TableCell className="capitalize">{paramName}</TableCell>
+                  <TableCell>{lastEntry ? `${lastEntry.value} ${paramData.unit}` : "-"}</TableCell>
+                  <TableCell>
+                    {lastEntry?.created_at 
+                      ? format(new Date(lastEntry.created_at), 'MMM d, yyyy') 
+                      : '-'}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>

@@ -137,7 +137,7 @@ const ParameterCard = ({
         <section aria-label={`${title} statistics`}>
           <div className="flex items-baseline gap-1">
             <div className="text-3xl font-bold" aria-label={`Current ${title}`}>
-              {data[data.length - 1]?.value ?? value}
+              {data[data.length - 1]?.value ?? (value || "-")}
             </div>
             <div className="text-lg text-neutral-500 dark:text-neutral-400">{unit}</div>
           </div>
@@ -158,7 +158,10 @@ const ParameterCard = ({
             }}
           >
             <ResponsiveContainer>
-              <LineChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+              <LineChart 
+                data={[...data].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())}
+                margin={{ top: 10, right: 0, left: -20, bottom: 0 }}
+              >
                 <XAxis
                   dataKey="created_at"
                   tick={{ fontSize: 10 }}
