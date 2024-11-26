@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { cn } from '@/lib/utils';
+import { normalizeNumericInput, parseNumericInput } from '@/lib/utils/number';
 
 type ParameterCardProps = {
   title: string;
@@ -22,7 +23,14 @@ type ParameterCardProps = {
   onAddValue: (value: number, date: Date) => void;
 };
 
-const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue }: ParameterCardProps) => {
+const ParameterCard = ({
+  title,
+  value,
+  unit,
+  data,
+  color = '#2563eb',
+  onAddValue,
+}: ParameterCardProps) => {
   const [isAddingValue, setIsAddingValue] = React.useState(false);
   const [newValue, setNewValue] = React.useState('');
   const [date, setDate] = React.useState<Date>();
@@ -30,12 +38,27 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newValue && date) {
-      onAddValue(parseFloat(newValue), date);
-      setNewValue('');
-      setDate(undefined);
-      setIsAddingValue(false);
+      const numericValue = parseNumericInput(newValue);
+      if (numericValue !== undefined) {
+        onAddValue(numericValue, date);
+        setNewValue('');
+        setDate(undefined);
+        setIsAddingValue(false);
+      }
     }
   };
+
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const normalizedValue = normalizeNumericInput(e.target.value);
+    setNewValue(normalizedValue);
+  };
+
+  // Set today's date when opening the form
+  React.useEffect(() => {
+    if (isAddingValue && !date) {
+      setDate(new Date());
+    }
+  }, [isAddingValue, date]);
 
   return (
     <Card>
@@ -65,10 +88,12 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
                     <Label htmlFor="value">Value</Label>
                     <Input
                       id="value"
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*[.,;]?[0-9]*"
+                      min="0"
                       value={newValue}
-                      onChange={(e) => setNewValue(e.target.value)}
+                      onChange={handleValueChange}
                       className="col-span-2 h-8"
                     />
                   </div>
@@ -85,11 +110,17 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {date ? format(date, 'PPP') : <span>Pick a date</span>}
+                          {date ? format(date, 'MMM d, yyyy') : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                        />
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -122,8 +153,8 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
             config={{
               value: {
                 label: title,
-                color: color
-              }
+                color: color,
+              },
             }}
           >
             <ResponsiveContainer>
@@ -146,7 +177,7 @@ const ParameterCard = ({ title, value, unit, data, color = '#2563eb', onAddValue
                             {new Date(label).toLocaleDateString('en-US', {
                               month: 'long',
                               day: 'numeric',
-                              year: 'numeric'
+                              year: 'numeric',
                             })}
                           </p>
                           <p className="text-sm text-neutral-500 dark:text-neutral-400">

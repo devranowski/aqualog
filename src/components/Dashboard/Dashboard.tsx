@@ -22,6 +22,7 @@ import {
 } from '@/lib/services/aquarium';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { parseNumericInput } from '@/lib/utils/number';
 
 export function Dashboard() {
   const { toast } = useToast();
@@ -32,7 +33,6 @@ export function Dashboard() {
   const [isAddLogOpen, setIsAddLogOpen] = React.useState(false);
   const [isAddAquariumOpen, setIsAddAquariumOpen] = React.useState(false);
   const [newLog, setNewLog] = React.useState<NewLog>({});
-  const [newLogDate, setNewLogDate] = React.useState<Date>();
 
   const fetchAquariums = async () => {
     try {
@@ -175,25 +175,26 @@ export function Dashboard() {
     }
   };
 
-  const handleAddLog = async () => {
-    if (!selectedAquarium || !newLogDate) return;
+  const handleAddLog = async (e: React.FormEvent, date: Date) => {
+    e.preventDefault();
+    if (!selectedAquarium) return;
 
     try {
       const logPromises = Object.entries(newLog).map(([parameterName, value]) => {
         const parameter = parameters.find((p) => p.name.toLowerCase() === parameterName.toLowerCase());
+        const numericValue = parseNumericInput(value);
 
-        if (!parameter || !value) {
-          throw new Error(`Parameter ${parameterName} not found or value is empty`);
+        if (!parameter || numericValue === undefined) {
+          throw new Error(`Parameter ${parameterName} not found or value is invalid`);
         }
 
-        return addParameterLog(selectedAquarium.id, parameter.id, parseFloat(value), newLogDate.toISOString());
+        return addParameterLog(selectedAquarium.id, parameter.id, numericValue, date.toISOString());
       });
 
       await Promise.all(logPromises);
       await fetchAquariumData();
 
       setNewLog({});
-      setNewLogDate(undefined);
       setIsAddLogOpen(false);
 
       toast({
@@ -204,7 +205,7 @@ export function Dashboard() {
       toast({
         variant: 'destructive',
         title: 'Failed to add log',
-        description: 'There was an error adding your log. Please try again later.'
+        description: 'There was an error adding your log. Please try again.'
       });
     }
   };
@@ -250,18 +251,22 @@ export function Dashboard() {
               </div>
 
               <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {parameters.map((parameter) => (
-                  <ParameterCard
-                    key={parameter.id}
-                    title={parameter.name}
-                    value={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.current ?? 0}
-                    unit={
-                      aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.unit ?? parameter.unit
-                    }
-                    data={aquariumDataState[selectedAquarium.id]?.[parameter.name.toLowerCase()]?.data ?? []}
-                    onAddValue={(value, date) => handleAddValue(parameter.name.toLowerCase(), value, date)}
-                  />
-                ))}
+                {selectedAquarium &&
+                  parameters.map((param) => {
+                    const parameterData = aquariumDataState[selectedAquarium.id]?.[param.name.toLowerCase()];
+                    return (
+                      parameterData && (
+                        <ParameterCard
+                          key={param.id}
+                          title={param.name}
+                          value={parameterData.current}
+                          unit={parameterData.unit}
+                          data={parameterData.data}
+                          onAddValue={(value, date) => handleAddValue(param.name, value, date)}
+                        />
+                      )
+                    );
+                  })}
               </div>
 
               <RecentLogs
@@ -298,11 +303,9 @@ export function Dashboard() {
       <AddLogDialog
         isOpen={isAddLogOpen}
         onOpenChange={setIsAddLogOpen}
-        onSubmit={handleAddLog}
+        onSubmit={(e, date) => handleAddLog(e, date)}
         newLog={newLog}
         onNewLogChange={handleNewLogChange}
-        newLogDate={newLogDate}
-        onNewLogDateChange={setNewLogDate}
         parameters={parameters}
       />
       <Toaster />
