@@ -45,27 +45,13 @@ export function Dashboard() {
     toast: toastFn
   });
 
-  const fetchAquariums = async () => {
-    try {
-      const aquariumsData = await getAquariums();
-      setAquariums(aquariumsData);
-      if (aquariumsData.length > 0 && !selectedAquarium) {
-        setSelectedAquarium(aquariumsData[0]);
-      }
-    } catch (error) {
-      toastFn({
-        variant: 'destructive',
-        title: 'Failed to fetch aquariums',
-        description: 'There was an error loading your aquariums. Please try again later.'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAquariumSelect = (aquarium: Aquarium) => {
+  const handleAquariumSelect = async (aquarium: Aquarium) => {
     setSelectedAquarium(aquarium);
     setIsLoading(true);
+    
+    if (parameters.length > 0) {
+      await fetchAquariumData();
+    }
   };
 
   const handleAddAquarium = async (name: string) => {
@@ -86,30 +72,20 @@ export function Dashboard() {
     }
   };
 
-  const fetchParameters = async () => {
-    try {
-      const parametersData = await getParameters();
-      setParameters(parametersData);
-      setNewLog(
-        parametersData.reduce(
-          (acc, param) => ({
-            ...acc,
-            [param.name.toLowerCase()]: ''
-          }),
-          {}
-        )
-      );
-    } catch (error) {
-      toastFn({
-        variant: 'destructive',
-        title: 'Failed to fetch parameters',
-        description: 'There was an error loading the water parameters. Please try again later.'
-      });
-    }
-  };
-
   const fetchAquariumData = async () => {
-    if (!selectedAquarium) return;
+    console.log('fetchAquariumData called with selectedAquarium:', selectedAquarium);
+    console.log('parameters:', parameters);
+    
+    if (!selectedAquarium) {
+      console.log('No selected aquarium, returning early');
+      return;
+    }
+    if (parameters.length === 0) {
+      console.log('No parameters loaded, returning early');
+      return;
+    }
+
+    console.log('Fetching data for aquarium:', selectedAquarium.name);
     setIsLoading(true);
 
     try {
@@ -117,6 +93,9 @@ export function Dashboard() {
         getParameterLogs(selectedAquarium.id),
         getLatestParameterLogs(selectedAquarium.id)
       ]);
+
+      console.log('Received logs:', logs);
+      console.log('Received latest logs:', latestLogs);
 
       setRecentLogs(latestLogs);
 
@@ -157,10 +136,16 @@ export function Dashboard() {
         };
       });
 
-      setAquariumDataState((prev: AquariumDataState) => ({
-        ...prev,
-        ...newData
-      }));
+      console.log('Setting aquarium data state:', newData);
+      setAquariumDataState((prev: AquariumDataState) => {
+        console.log('Previous state:', prev);
+        const newState = {
+          ...prev,
+          ...newData
+        };
+        console.log('New state:', newState);
+        return newState;
+      });
     } catch (error) {
       console.error('Error fetching aquarium data:', error);
       toastFn({
@@ -231,15 +216,58 @@ export function Dashboard() {
 
   const handleAddValue = async (parameterName: string, value: number, date: Date) => {
     const parameter = parameters.find((p) => p.name.toLowerCase() === parameterName.toLowerCase());
-    if (!parameter) return;
+    if (!parameter || !selectedAquarium) return;
 
-    const success = await addLog(parameterName, value, date);
-    if (success) {
-      // Single fetch to update both parameter data and recent logs
-      await fetchParameterData(parameter.id, parameter.name);
+    try {
+      // Only fetch the latest logs to update the recent logs section
+      const latestLogs = await getLatestParameterLogs(selectedAquarium.id);
+      setRecentLogs(latestLogs);
+
+      // Update the specific parameter's data in state
+      const latestLog = latestLogs.find((log) => log.parameter_id === parameter.id);
+      
+      setAquariumDataState((prev) => {
+        const currentParamData = prev[selectedAquarium.id]?.[parameterName.toLowerCase()]?.data || [];
+        const newData = [...currentParamData];
+        
+        // Add the new log
+        const newLog = {
+          date: date.toISOString(),
+          value: value,
+          created_at: date.toISOString()
+        };
+        
+        // Add it only if it's not already there
+        if (!newData.some(log => log.created_at === newLog.created_at)) {
+          newData.push(newLog);
+        }
+        
+        // Sort by date
+        newData.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+        return {
+          ...prev,
+          [selectedAquarium.id]: {
+            ...prev[selectedAquarium.id],
+            [parameterName.toLowerCase()]: {
+              current: latestLog?.value ?? value,
+              unit: parameter.unit,
+              data: newData
+            }
+          }
+        };
+      });
+
       toastFn({
         title: 'Parameter logged',
         description: `Successfully logged ${parameterName}: ${value}${parameter.unit}`
+      });
+    } catch (error) {
+      console.error('Error updating parameter data:', error);
+      toastFn({
+        variant: 'destructive',
+        title: 'Failed to update parameter data',
+        description: 'The value was logged but there was an error updating the display. Please refresh the page.'
       });
     }
   };
@@ -257,17 +285,54 @@ export function Dashboard() {
     setNewLog({ ...newLog, [parameter]: value });
   };
 
-  React.useEffect(() => {
-    fetchAquariums();
-    fetchParameters();
-  }, []);
+  const initializeData = async () => {
+    console.log('Initializing data...');
+    setIsLoading(true);
+    try {
+      // First, fetch both aquariums and parameters
+      const [aquariumsData, parametersData] = await Promise.all([
+        getAquariums(),
+        getParameters()
+      ]);
 
+      console.log('Received aquariums:', aquariumsData);
+      console.log('Received parameters:', parametersData);
+
+      // Set both states
+      setParameters(parametersData);
+      
+      if (aquariumsData.length > 0) {
+        const initialAquarium = aquariumsData[0];
+        console.log('Setting initial aquarium:', initialAquarium.name);
+        setAquariums(aquariumsData);
+        setSelectedAquarium(initialAquarium);
+      }
+    } catch (error) {
+      console.error('Error initializing:', error);
+      toastFn({
+        variant: 'destructive',
+        title: 'Failed to initialize',
+        description: 'There was an error loading your data. Please try again later.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // This effect will run whenever selectedAquarium or parameters change
   React.useEffect(() => {
+    console.log('Effect triggered - selectedAquarium:', selectedAquarium?.name);
+    console.log('Effect triggered - parameters length:', parameters.length);
+    
     if (selectedAquarium && parameters.length > 0) {
-      console.log('Fetching data for aquarium:', selectedAquarium.name);
+      console.log('Both states ready, fetching aquarium data');
       fetchAquariumData();
     }
   }, [selectedAquarium, parameters]);
+
+  React.useEffect(() => {
+    initializeData();
+  }, []);
 
   return (
     <SidebarProvider>
@@ -334,29 +399,27 @@ export function Dashboard() {
               </div>
 
               <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {selectedAquarium &&
-                  parameters.map((param) => {
-                    const parameterData = aquariumDataState[selectedAquarium.id]?.[param.name.toLowerCase()];
-                    
-                    if (!parameterData) return null;
-
-                    return (
-                      <ParameterCard
-                        key={param.id}
-                        title={param.name}
-                        value={parameterData.current}
-                        unit={parameterData.unit}
-                        data={parameterData.data}
-                        onAddValue={async (value, date) => {
-                          await handleAddValue(param.name, value, date);
-                        }}
-                        aquariumId={selectedAquarium.id}
-                        parameters={parameters}
-                        isSubmitting={isSubmitting}
-                        onSuccess={refreshData}
-                      />
-                    );
-                  })}
+                {parameters.map((param) => {
+                  const paramData = aquariumDataState[selectedAquarium.id]?.[param.name.toLowerCase()];
+                  return (
+                    <ParameterCard
+                      key={param.id}
+                      title={param.name}
+                      value={paramData?.current ?? 0}
+                      unit={paramData?.unit ?? param.unit}
+                      data={paramData?.data ?? []}
+                      onAddValue={async (value, date) => {
+                        const success = await addLog(param.name, value, date);
+                        if (success) {
+                          handleAddValue(param.name, value, date);
+                        }
+                      }}
+                      aquariumId={selectedAquarium.id}
+                      parameters={parameters}
+                      isSubmitting={isSubmitting}
+                    />
+                  );
+                })}
               </div>
 
               <RecentLogs
