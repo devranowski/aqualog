@@ -70,25 +70,25 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // If this is a new sign up, we can handle any additional setup here
       if (event === 'SIGNED_IN' && session?.user) {
-        const timestamp = new Date().toISOString();
-        // You can add additional user data to your database here if needed
-        const { error } = await supabase.from('users').upsert(
-          {
-            id: session.user.id,
-            email: session.user.email ?? '',
-            created_at: timestamp,
-            updated_at: timestamp
-          },
-          {
-            onConflict: 'id'
-          }
-        );
+        setTimeout(async () => {
+          const timestamp = new Date().toISOString();
+          const { error } = await supabase.from('users').upsert(
+            {
+              id: session.user.id,
+              email: session.user.email ?? '',
+              created_at: timestamp,
+              updated_at: timestamp
+            },
+            {
+              onConflict: 'id'
+            }
+          );
 
-        if (error) {
-          console.error('Error updating user data:', error);
-        }
+          if (error) {
+            console.error('Error updating user data:', error);
+          }
+        }, 0);
       }
     });
 
